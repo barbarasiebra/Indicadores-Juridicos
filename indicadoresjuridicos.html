@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel do Contencioso — FGH</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --bg:#0a0a0f;
+      --panel:#1a1a24;
+      --panel-2:#14141d;
+      --stroke:rgba(255,255,255,.09);
+      --muted:#9ca3af;
+      --text:#f8fafc;
+      --blue:#3b82f6;
+      --green:#10b981;
+      --red:#ef4444;
+      --yellow:#f59e0b;
+      --purple:#8b5cf6;
+      --radius:16px;
+      --shadow:0 20px 50px rgba(0,0,0,.34);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(59,130,246,.18), transparent 28%),
+        radial-gradient(circle at 82% 14%, rgba(16,185,129,.10), transparent 25%),
+        radial-gradient(circle at 50% 100%, rgba(239,68,68,.10), transparent 30%),
+        var(--bg);
+      min-height:100vh;
+    }
+
+    .wrap{max-width:1440px;margin:0 auto;padding:32px}
+    header{
+      display:flex;
+      justify-content:space-between;
+      gap:24px;
+      align-items:flex-start;
+      padding:28px;
+      border:1px solid var(--stroke);
+      border-radius:24px;
+      background:linear-gradient(135deg,rgba(26,26,36,.94),rgba(20,20,29,.82));
+      box-shadow:var(--shadow);
+      margin-bottom:24px;
+      animation:rise .7s ease both;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:#bfdbfe;
+      background:rgba(59,130,246,.12);
+      border:1px solid rgba(59,130,246,.25);
+      border-radius:999px;
+      padding:7px 12px;
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+
+    h1{font-size:36px;line-height:1.05;margin:16px 0 8px;letter-spacing:-.04em}
+    .subtitle{color:var(--muted);font-size:15px;margin:0}
+    .status-pill{
+      border-radius:999px;
+      padding:10px 14px;
+      background:rgba(16,185,129,.10);
+      border:1px solid rgba(16,185,129,.28);
+      color:#a7f3d0;
+      font-weight:700;
+      font-size:13px;
+      white-space:nowrap;
+    }
+
+    .kpi-grid{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:16px;
+      margin-bottom:24px;
+    }
+
+    .card,.chart-card,.alerts{
+      background:linear-gradient(180deg,rgba(26,26,36,.96),rgba(17,17,25,.96));
+      border:1px solid var(--stroke);
+      border-radius:var(--radius);
+      box-shadow:0 14px 35px rgba(0,0,0,.22);
+      animation:rise .7s ease both;
+    }
+
+    .card{
+      padding:20px;
+      min-height:150px;
+      transition:.25s ease;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .card:before{
+      content:"";
+      position:absolute;
+      width:120px;height:120px;
+      border-radius:999px;
+      right:-55px;top:-55px;
+      background:var(--accent);
+      opacity:.16;
+      filter:blur(2px);
+    }
+
+    .card:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.16)}
+    .card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+    .icon{
+      width:42px;height:42px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:20px;
+    }
+    .tag{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    .value{font-size:30px;font-weight:800;letter-spacing:-.04em;margin-bottom:6px}
+    .small-value{font-size:22px}
+    .note{font-size:12px;color:var(--muted);line-height:1.45}
+    .green{--accent:var(--green)}
+    .red{--accent:var(--red)}
+    .yellow{--accent:var(--yellow)}
+    .blue{--accent:var(--blue)}
+
+    .grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .chart-card{padding:22px}
+    .chart-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:12px;
+    }
+    h2{font-size:18px;margin:0;letter-spacing:-.02em}
+    .mini{
+      color:var(--muted);
+      font-size:12px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.07);
+      padding:6px 10px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
+
+    .chart-box{height:310px;position:relative}
+    .chart-box.small{height:280px}
+    .insight{
+      margin:14px 0 0;
+      color:#d1d5db;
+      font-size:13px;
+      line-height:1.55;
+      padding-top:12px;
+      border-top:1px solid rgba(255,255,255,.07);
+    }
+    .insight strong{color:#fff}
+
+    .executive-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+    }
+    .executive-grid div{
+      padding:14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.07);
+    }
+    .executive-grid strong{
+      display:block;
+      font-size:13px;
+      margin-bottom:7px;
+      color:#fff;
+    }
+    .executive-grid span{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .alerts{
+      padding:22px;
+      border-color:rgba(239,68,68,.25);
+      background:
+        linear-gradient(180deg,rgba(26,26,36,.96),rgba(17,17,25,.96)),
+        radial-gradient(circle at top right,rgba(239,68,68,.16),transparent 35%);
+      margin-bottom:24px;
+    }
+
+    table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:14px}
+    th{
+      text-align:left;
+      color:#cbd5e1;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+      padding:14px;
+      background:rgba(255,255,255,.05);
+    }
+    td{
+      padding:15px 14px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      color:#e5e7eb;
+      font-size:13px;
+    }
+    tr:hover td{background:rgba(255,255,255,.035)}
+    .urgency{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:800;
+      border-radius:999px;
+      padding:7px 10px;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .crit{background:rgba(239,68,68,.10);color:#fecaca}
+    .med{background:rgba(245,158,11,.10);color:#fde68a}
+
+    footer{
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
+      padding:18px 0 4px;
+    }
+
+    @keyframes rise{
+      from{opacity:0;transform:translateY(14px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    @media(max-width:1180px){
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+      .grid{grid-template-columns:1fr}
+      .executive-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media(max-width:680px){
+      .wrap{padding:18px}
+      header{flex-direction:column;padding:22px}
+      h1{font-size:28px}
+      .kpi-grid{grid-template-columns:1fr}
+      .chart-box{height:280px}
+      .executive-grid{grid-template-columns:1fr}
+      table{display:block;overflow-x:auto}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <span class="eyebrow">⚖️ Contencioso executivo</span>
+        <h1>Painel do Contencioso — FGH</h1>
+        <p class="subtitle">Superintendência Geral | Atualizado em Jul/2026</p>
+      </div>
+      <div class="status-pill">35 ativos de 44 processos</div>
+    </header>
+
+    <section class="kpi-grid">
+      <div class="card blue">
+        <div class="card-top"><span class="tag">Processos ativos</span><span class="icon">📂</span></div>
+        <div class="value">35</div>
+        <div class="note">Base de tudo: dimensiona o tamanho atual do problema para a Superintendência.</div>
+      </div>
+
+      <div class="card red">
+        <div class="card-top"><span class="tag">Valor condenação</span><span class="icon">💰</span></div>
+        <div class="value small-value" id="valorCondenacao">R$ —</div>
+        <div class="note">Responde à pergunta central: quanto podemos perder?</div>
+      </div>
+
+      <div class="card yellow">
+        <div class="card-top"><span class="tag">Valor pago</span><span class="icon">💸</span></div>
+        <div class="value small-value" id="valorPago">R$ —</div>
+        <div class="note">Mostra o desembolso já realizado nos processos consolidados.</div>
+      </div>
+
+      <div class="card red">
+        <div class="card-top"><span class="tag">Risco alto</span><span class="icon">🚨</span></div>
+        <div class="value">6</div>
+        <div class="note">Prioriza a atenção: o que é alto precisa de ação imediata.</div>
+      </div>
+
+      <div class="card green">
+        <div class="card-top"><span class="tag">Taxa de êxito</span><span class="icon">📈</span></div>
+        <div class="value">20,5%</div>
+        <div class="note">Mede a performance jurídica: estamos ganhando ou perdendo?</div>
+      </div>
+    </section>
+
+    <section class="chart-card" style="margin-bottom:18px;">
+      <div class="chart-title">
+        <h2>Leitura executiva dos indicadores</h2>
+        <span class="mini">Interpretação para decisão</span>
+      </div>
+      <div class="executive-grid">
+        <div><strong>Total de processos ativos</strong><span>Dimensiona o tamanho do contencioso atual.</span></div>
+        <div><strong>Valor total da condenação</strong><span>Indica a exposição financeira potencial.</span></div>
+        <div><strong>Valor total pago</strong><span>Evidencia o desembolso já realizado.</span></div>
+        <div><strong>Probabilidade de êxito</strong><span>Prioriza os casos que exigem ação imediata.</span></div>
+        <div><strong>Fase processual</strong><span>Mostra o funil e o estágio de maturidade dos processos.</span></div>
+        <div><strong>Temas recorrentes</strong><span>Aponta onde atuar preventivamente.</span></div>
+        <div><strong>Prazos críticos</strong><span>Evita perdas operacionais por desatenção.</span></div>
+        <div><strong>Taxa de êxito</strong><span>Mede a performance jurídica institucional.</span></div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="chart-card">
+        <div class="chart-title">
+          <h2>Processos por Unidade de Saúde</h2>
+          <span class="mini">44 processos</span>
+        </div>
+        <div class="chart-box"><canvas id="unidadesChart"></canvas></div>
+        <p class="insight"><strong>Hospital Alfa concentra 68,2% dos processos</strong>. Este indicador identifica onde está o foco do risco e orienta a priorização da atuação preventiva.</p>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <h2>Probabilidade de Êxito</h2>
+          <span class="mini">Alta / Média / Baixa</span>
+        </div>
+        <div class="chart-box"><canvas id="probChart"></canvas></div>
+        <p class="insight"><strong>Alta: 6 | Média: 14 | Baixa: 18 | Não informado: 6.</strong> Este indicador prioriza a atenção: os casos de maior risco demandam ação imediata.</p>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="chart-card">
+        <div class="chart-title">
+          <h2>Processos por Fase Processual</h2>
+          <span class="mini">Pipeline jurídico</span>
+        </div>
+        <div class="chart-box small"><canvas id="faseChart"></canvas></div>
+        <p class="insight"><strong>A fase recursal é a mais representativa</strong>, com 13 processos. O indicador mostra o funil jurídico: início, recurso, execução, liquidação ou arquivamento.</p>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <h2>Top Temas Recorrentes</h2>
+          <span class="mini">Frequência</span>
+        </div>
+        <div class="chart-box small"><canvas id="temasChart"></canvas></div>
+        <p class="insight"><strong>Insalubridade, horas extras/jornada e piso da enfermagem</strong> são temas prioritários para atuação preventiva e redução de novos processos.</p>
+      </div>
+    </section>
+
+    <section class="alerts">
+      <div class="chart-title">
+        <h2>Alertas — Prazos Críticos e Pendências Urgentes</h2>
+        <span class="mini">Alerta operacional: evita perdas por desatenção</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Nº Processo</th>
+            <th>Unidade</th>
+            <th>Situação/Pendência</th>
+            <th>Nível de Urgência</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0000140-89.2024</td>
+            <td>SAD</td>
+            <td>Prazo para cálculos de liquidação</td>
+            <td><span class="urgency crit">🔴 Crítico</span></td>
+          </tr>
+          <tr>
+            <td>004175.2023</td>
+            <td>MPT-Alfa</td>
+            <td>Aguardando documentos da FGH</td>
+            <td><span class="urgency crit">🔴 Crítico</span></td>
+          </tr>
+          <tr>
+            <td>0055893-65.2025</td>
+            <td>UPAE Mustardinha</td>
+            <td>Empresa não se manifestou</td>
+            <td><span class="urgency med">🟡 Atenção</span></td>
+          </tr>
+          <tr>
+            <td>0093952-93.2023</td>
+            <td>UPAE Ibura</td>
+            <td>Execução frustrada, indicar bens</td>
+            <td><span class="urgency med">🟡 Atenção</span></td>
+          </tr>
+          <tr>
+            <td>002883.2022</td>
+            <td>MPT-Alfa</td>
+            <td>Aguardando intimação de testemunhas</td>
+            <td><span class="urgency med">🟡 Atenção</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>Dados consolidados dos escritórios Black Advogados e Correia — Jul/2026</footer>
+  </div>
+
+  <script>
+    const br = new Intl.NumberFormat('pt-BR');
+    const moedaBR = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' });
+
+    /*
+      Preencha abaixo quando os valores consolidados em R$ estiverem disponíveis.
+      Mantido como null para não inventar dados.
+      Exemplo: const valorTotalCondenacao = 1234567.89;
+    */
+    const valorTotalCondenacao = 2088000.00;
+    const valorTotalPago = 2296800.00;
+
+    document.getElementById('valorCondenacao').textContent =
+      valorTotalCondenacao === null ? 'R$ —' : moedaBR.format(valorTotalCondenacao);
+
+    document.getElementById('valorPago').textContent =
+      valorTotalPago === null ? 'R$ —' : moedaBR.format(valorTotalPago);
+
+    const centerTextPlugin = {
+      id:'centerTextPlugin',
+      afterDraw(chart){
+        if(chart.canvas.id !== 'probChart') return;
+        const {ctx, chartArea:{left,right,top,bottom}} = chart;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const x = (left + right) / 2;
+        const y = (top + bottom) / 2;
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '800 24px Inter';
+        ctx.fillText('44', x, y - 8);
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '600 12px Inter';
+        ctx.fillText('processos', x, y + 16);
+        ctx.restore();
+      }
+    };
+
+    Chart.register(centerTextPlugin);
+
+    const baseOptions = {
+      responsive:true,
+      maintainAspectRatio:false,
+      animation:{duration:1100,easing:'easeOutQuart'},
+      plugins:{
+        legend:{labels:{color:'#d1d5db',font:{family:'Inter',size:12}}},
+        tooltip:{
+          backgroundColor:'rgba(10,10,15,.96)',
+          titleColor:'#fff',
+          bodyColor:'#e5e7eb',
+          borderColor:'rgba(255,255,255,.12)',
+          borderWidth:1,
+          padding:12,
+          displayColors:true,
+          callbacks:{
+            label:(ctx)=> {
+              const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+              const pct = total ? ((ctx.raw / total) * 100).toLocaleString('pt-BR', {maximumFractionDigits:1}) : '0';
+              return `${ctx.label}: ${br.format(ctx.raw)} processo(s) | ${pct}%`;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ticks:{color:'#9ca3af'},grid:{color:'rgba(255,255,255,.06)'}},
+        y:{ticks:{color:'#d1d5db'},grid:{color:'rgba(255,255,255,.04)'}}
+      }
+    };
+
+    new Chart(document.getElementById('unidadesChart'),{
+      type:'bar',
+      data:{
+        labels:['Hospital Alfa (HNSG)','RT (sede)','HRN','UPAE Carpina','UPAE Salgueiro','UPAE Mustardinha','UPAE Ibura','UPAE Garanhuns','HPS','SAD'],
+        datasets:[{
+          label:'Processos',
+          data:[30,3,2,2,2,1,1,1,1,1],
+          borderRadius:10,
+          backgroundColor:[
+            'rgba(239,68,68,.82)',
+            'rgba(59,130,246,.72)',
+            'rgba(59,130,246,.55)',
+            'rgba(59,130,246,.55)',
+            'rgba(59,130,246,.55)',
+            'rgba(59,130,246,.42)',
+            'rgba(59,130,246,.42)',
+            'rgba(59,130,246,.42)',
+            'rgba(59,130,246,.42)',
+            'rgba(59,130,246,.42)'
+          ],
+          borderColor:'rgba(255,255,255,.10)',
+          borderWidth:1
+        }]
+      },
+      options:{...baseOptions,indexAxis:'y',plugins:{...baseOptions.plugins,legend:{display:false}}}
+    });
+
+    new Chart(document.getElementById('probChart'),{
+      type:'doughnut',
+      data:{
+        labels:['Alta: 6','Média: 14','Baixa: 18','Não informado: 6'],
+        datasets:[{
+          label:'Processos',
+          data:[6,14,18,6],
+          backgroundColor:['#10b981','#f59e0b','#ef4444','rgba(156,163,175,.55)'],
+          borderColor:'#1a1a24',
+          borderWidth:4,
+          hoverOffset:8
+        }]
+      },
+      options:{
+        ...baseOptions,
+        cutout:'66%',
+        scales:{},
+        plugins:{
+          ...baseOptions.plugins,
+          legend:{position:'bottom',labels:{color:'#d1d5db',font:{family:'Inter',size:12},padding:16}}
+        }
+      }
+    });
+
+    new Chart(document.getElementById('faseChart'),{
+      type:'bar',
+      data:{
+        labels:['Arquivado','Conhecimento','Instrução','Recursal','Execução','Liquidação','Administrativo'],
+        datasets:[{
+          label:'Processos',
+          data:[9,6,4,13,4,4,4],
+          borderRadius:10,
+          backgroundColor:['rgba(16,185,129,.65)','rgba(59,130,246,.65)','rgba(245,158,11,.65)','rgba(139,92,246,.78)','rgba(239,68,68,.68)','rgba(245,158,11,.52)','rgba(156,163,175,.55)'],
+          borderColor:'rgba(255,255,255,.10)',
+          borderWidth:1
+        }]
+      },
+      options:{...baseOptions,plugins:{...baseOptions.plugins,legend:{display:false}}}
+    });
+
+    new Chart(document.getElementById('temasChart'),{
+      type:'bar',
+      data:{
+        labels:['Adicional de Insalubridade','Horas Extras / Jornada 12x36','Verbas Rescisórias','Danos Morais','Acúmulo/Desvio de Função','Piso Salarial da Enfermagem','Assédio Moral','Doença Ocupacional'],
+        datasets:[{
+          label:'Frequência',
+          data:[15,12,10,10,7,6,5,4],
+          borderRadius:10,
+          backgroundColor:['rgba(239,68,68,.78)','rgba(245,158,11,.78)','rgba(59,130,246,.62)','rgba(59,130,246,.62)','rgba(16,185,129,.58)','rgba(16,185,129,.50)','rgba(156,163,175,.55)','rgba(156,163,175,.42)'],
+          borderColor:'rgba(255,255,255,.10)',
+          borderWidth:1
+        }]
+      },
+      options:{...baseOptions,indexAxis:'y',plugins:{...baseOptions.plugins,legend:{display:false}}}
+    });
+  </script>
+</body>
+</html>
